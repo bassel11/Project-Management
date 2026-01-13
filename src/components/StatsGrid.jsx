@@ -77,7 +77,7 @@ export default function StatsGrid() {
         }
     }, [currentWorkspace]);
 
-    return (
+    return ( 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 my-9">
             {statCards.map(
                 ({ icon: Icon, title, value, subtitle, bgColor, textColor }, i) => (
