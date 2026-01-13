@@ -3,11 +3,13 @@ import { useDispatch, useSelector } from 'react-redux'
 import { toggleTheme } from '../features/themeSlice'
 import { MoonIcon, SunIcon } from 'lucide-react'
 import { logout } from '../features/authSlice'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import authService from '../services/authService'
 
 const Navbar = ({ setIsSidebarOpen }) => {
 
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const { theme } = useSelector(state => state.theme);
     const { user } = useSelector(state => state.auth);
 
@@ -48,7 +50,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
                         <div className="flex items-center gap-3">
                             <div className="size-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm">{user.name ? user.name[0].toUpperCase() : (user.email || '?')[0].toUpperCase()}</div>
                             <span className="hidden sm:block">{user.name || user.email}</span>
-                            <button onClick={() => dispatch(logout())} className="ml-2 text-sm text-red-500">Log out</button>
+                            <button onClick={async () => { try { await authService.logout(); dispatch(logout()); navigate('/login'); } catch (e) { dispatch(logout()); navigate('/login'); } }} className="ml-2 text-sm text-red-500">Log out</button>
                         </div>
                     ) : (
                         <Link to="/login" className="text-sm text-blue-600">Sign in</Link>

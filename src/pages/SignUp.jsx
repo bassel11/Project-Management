@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { registerSuccess } from '../features/authSlice'
+import { register, refreshAuth } from '../features/authSlice'
 
 const SignUp = () => {
   const [name, setName] = useState('')
@@ -11,29 +11,31 @@ const SignUp = () => {
   const [confirm, setConfirm] = useState('')
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const { user } = useSelector((state) => state.auth)
+  const { user, status } = useSelector((state) => state.auth)
 
   useEffect(() => {
     if (user) navigate('/')
   }, [user, navigate])
 
-  const handleSubmit = (e) => {
+  const isLoading = status === 'loading'
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (password !== confirm) {
       toast.error('Passwords do not match')
       return
     }
-    const users = JSON.parse(localStorage.getItem('users') || '[]')
-    if (users.find((u) => u.email === email)) {
-      toast.error('Email already in use')
-      return
+    try {
+      const res = await dispatch(register({ name, email, password })).unwrap()
+      if (!res?.user) {
+        try { await dispatch(refreshAuth()).unwrap() } catch (err) { console.debug('refreshAuth failed', err) }
+      }
+      toast.success('Account created')
+      navigate('/')
+    } catch (err) {
+      const msg = err?.message || err?.error || 'Error creating account'
+      toast.error(msg)
     }
-    const newUser = { id: Date.now(), name, email, password }
-    users.push(newUser)
-    localStorage.setItem('users', JSON.stringify(users))
-    dispatch(registerSuccess({ user: newUser, token: 'local-token' }))
-    toast.success('Account created')
-    navigate('/')
   }
 
   return (
@@ -45,7 +47,7 @@ const SignUp = () => {
           <input value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Email" type="email" className="w-full px-3 py-2 border rounded-md bg-white dark:bg-zinc-800 text-sm" />
           <input value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Password" type="password" className="w-full px-3 py-2 border rounded-md bg-white dark:bg-zinc-800 text-sm" />
           <input value={confirm} onChange={(e) => setConfirm(e.target.value)} required placeholder="Confirm password" type="password" className="w-full px-3 py-2 border rounded-md bg-white dark:bg-zinc-800 text-sm" />
-          <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-md">Create account</button>
+          <button type="submit" disabled={isLoading} className="w-full bg-blue-600 text-white py-2 rounded-md">{isLoading ? 'Creating...' : 'Create account'}</button>
         </form>
         <p className="mt-4 text-sm">Already have an account? <Link to="/login" className="text-blue-600">Sign in</Link></p>
       </div>

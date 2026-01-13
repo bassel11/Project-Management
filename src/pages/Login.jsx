@@ -2,30 +2,39 @@ import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { loginSuccess } from '../features/authSlice'
+import { login, refreshAuth } from '../features/authSlice'
 
 const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const { user } = useSelector((state) => state.auth)
+  const { user, status } = useSelector((state) => state.auth)
 
   useEffect(() => {
     if (user) navigate('/')
   }, [user, navigate])
 
-  const handleSubmit = (e) => {
+  const isLoading = status === 'loading'
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    const users = JSON.parse(localStorage.getItem('users') || '[]')
-    const user = users.find((u) => u.email === email && u.password === password)
-    if (!user) {
-      toast.error('Invalid email or password')
-      return
+    try {
+      const res = await dispatch(login({ email, password })).unwrap()
+      // If backend did not return user, try to refresh /me
+      if (!res?.user) {
+        try {
+          await dispatch(refreshAuth()).unwrap()
+        } catch (err) {
+          console.debug('refreshAuth failed', err)
+        }
+      }
+      toast.success('Logged in')
+      navigate('/')
+    } catch (err) {
+      const msg = err?.message || err?.error || 'Invalid email or password'
+      toast.error(msg)
     }
-    dispatch(loginSuccess({ user, token: 'local-token' }))
-    toast.success('Logged in')
-    navigate('/')
   }
 
   return (
@@ -49,7 +58,7 @@ const Login = () => {
             type="password"
             className="w-full px-3 py-2 border rounded-md bg-white dark:bg-zinc-800 text-sm"
           />
-          <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-md">Sign in</button>
+          <button type="submit" disabled={isLoading} className="w-full bg-blue-600 text-white py-2 rounded-md">{isLoading ? 'Signing in...' : 'Sign in'}</button>
         </form>
         <p className="mt-4 text-sm">Don't have an account? <Link to="/signup" className="text-blue-600">Sign up</Link></p>
       </div>

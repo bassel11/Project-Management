@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar'
 import { Outlet } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { loadTheme } from '../features/themeSlice'
+import { refreshAuth } from '../features/authSlice'
 import { Loader2Icon } from 'lucide-react'
 
 const Layout = () => {
@@ -14,6 +15,8 @@ const Layout = () => {
     // Initial load of theme
     useEffect(() => {
         dispatch(loadTheme())
+        // Try to refresh auth on app start (if refresh token cookie exists)
+        dispatch(refreshAuth())
     }, [])
 
     if (loading) return (
