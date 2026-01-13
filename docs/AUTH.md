@@ -7,28 +7,28 @@ This project expects a backend that exposes authentication endpoints. The fronte
   - `VITE_API_URL` - Base URL for your API (e.g. `https://api.example.com`)
 
 ### Endpoints (recommended)
-- POST /auth/login
-  - Request body: { email: string, password: string }
+- POST /api/Auth/login
+  - Request body: { username: string, email: string, password: string, authType: number }
   - Response: { user: {...}, token: "<access_token>" }
   - Optionally set httpOnly refresh cookie when authenticated.
 
-- POST /auth/register
-  - Request body: { name: string, email: string, password: string }
+- POST /api/Auth/register
+  - Request body: { username: string, email: string, password: string, authType: number }
   - Response: { user: {...}, token: "<access_token>" }
 
-- GET /auth/refresh
+- GET /api/Auth/refresh
   - No body required; expects a httpOnly refresh cookie to be sent
   - Response: { user: {...}, token: "<access_token>" }
 
-- POST /auth/logout
+- POST /api/Auth/logout
   - Clears refresh cookie server-side and invalidates session
   - Response: 200 OK
 
 ### Client behaviour
 - Access tokens (JWT) are stored in Redux state (not persisted) for improved security.
-- Refresh tokens should be stored as httpOnly cookies by the server so the client can call `GET /auth/refresh` to obtain a new access token when necessary.
+- Refresh tokens should be stored as httpOnly cookies by the server so the client can call `GET /api/Auth/refresh` to obtain a new access token when necessary.
 - Axios instance `src/services/api.js` uses `withCredentials: true` so cookie-based refresh works cross-origin when backend allows credentials.
-- On 401 responses, axios interceptor will call the `refreshAuth` thunk which calls `/auth/refresh` and attempts to retry the failed request.
+- On 401 responses, axios interceptor will call the `refreshAuth` thunk which calls `/api/Auth/refresh` and attempts to retry the failed request.
 
 ### Security recommendations
 - Prefer httpOnly secure refresh cookies and short-lived access tokens.

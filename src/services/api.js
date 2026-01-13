@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getToken, setToken, clearToken } from './tokenService'
+import { getToken, setToken, clearToken, getRefreshToken, setRefreshToken, clearRefreshToken } from './tokenService'
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
@@ -12,7 +12,7 @@ const api = axios.create({
 })
 
 // plain axios instance that does NOT use interceptors (for refresh requests)
-const plain = axios.create({ baseURL, withCredentials: true })
+export const plain = axios.create({ baseURL, withCredentials: true })
 
 let isRefreshing = false
 let failedQueue = []
@@ -60,11 +60,19 @@ api.interceptors.response.use(
 
       try {
         // call refresh endpoint using plain axios instance to avoid interceptor loop
-        const r = await plain.get('/auth/refresh')
+        // don't attempt refresh if we don't have a refresh token
+        if (!getRefreshToken()) throw new Error('No refresh token available')
+
+        const r = await plain.post('/api/Auth/refresh-token', {
+          token: getToken(),
+          refreshToken: getRefreshToken(),
+          authType: 0,
+        })
         const data = r.data
-        // data is expected to contain { token }
+        // data is expected to contain { token, refreshToken }
         if (data?.token) {
           setToken(data.token)
+          if (data?.refreshToken) setRefreshToken(data.refreshToken)
           processQueue(null, data.token)
           originalRequest.headers.Authorization = `Bearer ${data.token}`
           return api(originalRequest)
@@ -73,6 +81,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null)
         clearToken()
+        clearRefreshToken()
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false
