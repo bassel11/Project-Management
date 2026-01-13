@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "./pages/Layout";
+import StartPage from "./pages/StartPage";
 import { Toaster } from "react-hot-toast";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
@@ -17,7 +18,8 @@ const App = () => {
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
-                <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                <Route path="/" element={<StartPage />} />
+                <Route path="/app" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                     <Route index element={<Dashboard />} />
                     <Route path="team" element={<Team />} />
                     <Route path="projects" element={<Projects />} />
