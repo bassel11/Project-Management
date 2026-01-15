@@ -1,4 +1,4 @@
-import { SearchIcon, PanelLeft } from 'lucide-react'
+import { SearchIcon, PanelLeft, Shield } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toggleTheme } from '../features/themeSlice'
 import { MoonIcon, SunIcon } from 'lucide-react'
@@ -48,6 +48,12 @@ const Navbar = ({ setIsSidebarOpen }) => {
 
                     {user ? (
                         <div className="flex items-center gap-3">
+                            {user.role === 'ADMIN' && (
+                                <Link to="/app/admin" title="Admin dashboard" className="hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded text-sm bg-gradient-to-br from-purple-500 to-purple-600 text-white hover:opacity-95">
+                                    <Shield className="w-4 h-4" />
+                                    Admin
+                                </Link>
+                            )}
                             <div className="size-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm">{user.name ? user.name[0].toUpperCase() : (user.email || '?')[0].toUpperCase()}</div>
                             <span className="hidden sm:block">{user.name || user.email}</span>
                             <button onClick={async () => { try { await authService.logout(); dispatch(logout()); navigate('/login'); } catch (e) { dispatch(logout()); navigate('/login'); } }} className="ml-2 text-sm text-red-500">Log out</button>
